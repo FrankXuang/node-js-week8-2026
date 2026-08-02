@@ -30,6 +30,30 @@ async function main() {
   //     （TypeORM 會自動取出它的 id 填進外鍵），寫法範例：
   //      courseRepo.save({ name: '...', user: 教練物件, skill: 技能物件 })
   // ======================================================================
+  const skillRepo = dataSource.getRepository('Skill')
+  const userRepo = dataSource.getRepository('User')
+  const courseRepo = dataSource.getRepository('Course')
+
+  // 1. 先種「被指著」的表：SKILL、USER（COURSE 的外來鍵指著它們）
+  const [weightlifting, yoga, spinning] = await skillRepo.save([
+    { name: '重訓' },
+    { name: '瑜珈' },
+    { name: '飛輪' },
+  ])
+
+  const [sea, hua] = await userRepo.save([
+    { name: '海格教練', email: 'coach1@livefit.tw', role: 'COACH' },
+    { name: '小美教練', email: 'coach2@livefit.tw', role: 'COACH' },
+  ])
+
+  // 2. 再種 COURSE：relation 直接塞整個物件，TypeORM 自己把 id 填進 user_id / skill_id
+  await courseRepo.save([
+    { name: '肌力入門班', description: '肌力入門班', start_at: '2026-08-03 19:00:00', end_at: '2026-08-03 20:00:00', max_participants: 16, user: sea, skill: weightlifting },
+    { name: '週末飛輪', description: '週末飛輪', start_at: '2026-08-05 07:00:00', end_at: '2026-08-05 08:00:00', max_participants: 8, user: hua, skill: spinning },
+    { name: '晨間瑜珈', description: '晨間瑜珈', start_at: '2026-08-06 19:00:00', end_at: '2026-08-06 20:00:00', max_participants: 12, user: hua, skill: yoga },
+    { name: '核心特訓', description: '核心特訓', start_at: '2026-08-08 10:00:00', end_at: '2026-08-08 11:00:00', max_participants: 10, user: sea, skill: weightlifting },
+  ])
+
 
   console.log('🌱 seed 完成')
   await dataSource.destroy()
